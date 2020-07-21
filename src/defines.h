@@ -7,6 +7,8 @@
 #define local_persist static
 #define global_variable static
 
+#define PI 3.14159265f
+
 typedef int8_t i8;
 typedef int16_t i16;
 typedef int32_t i32;

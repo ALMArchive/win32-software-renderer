@@ -1,5 +1,9 @@
 #include <windows.h>
+#include <math.h>
 #include "stars_3d.h"
+
+f32 FOV = 90.0;
+f32 TanHalfFOV = tan(to_radians(FOV / 2.0f));
 
 star_field StarFieldCreate(u32 NumStars, f32 Spread, f32 Speed) {
 	star_field StarField = {};
@@ -62,8 +66,9 @@ void StarFieldUpdateAndRender(bitmap* Bitmap, star_field* StarField, f32 delta) 
 
 		//Multiplying the position by (size/2) and then adding (size/2)
 		//remaps the positions from range (-1, 1) to (0, size)
-		i32 X = (i32)((StarField->StarsX[i] / StarField->StarsZ[i]) * HalfWidth + HalfWidth);
-		i32 Y = (i32)((StarField->StarsY[i] / StarField->StarsZ[i]) * HalfHeight + HalfHeight);
+		f32 Z_DIV = StarField->StarsZ[i] / TanHalfFOV;
+		i32 X = (i32)((StarField->StarsX[i] / Z_DIV) * HalfWidth + HalfWidth);
+		i32 Y = (i32)((StarField->StarsY[i] / Z_DIV) * HalfHeight + HalfHeight);
 
 		//If the star is not within range of the screen, then generate a
 		//new position for it.
