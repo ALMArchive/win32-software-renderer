@@ -2,8 +2,8 @@
 #include <math.h>
 #include "stars_3d.h"
 
-f32 FOV = 90.0;
-f32 TanHalfFOV = tan(to_radians(FOV / 2.0f));
+#define FOV 90.0f
+internal f32 TanHalfFOV = tan(to_radians(FOV / 2.0f));
 
 star_field StarFieldCreate(u32 NumStars, f32 Spread, f32 Speed) {
 	star_field StarField = {};

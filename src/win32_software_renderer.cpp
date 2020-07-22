@@ -3,16 +3,29 @@
 #include "bitmap.h"
 #include "stars_3d.h"
 #include "weird_gradient.h"
+#include "scan_buffer.h"
+#include "vertex.h"
+#include "triangle_field.h"
 
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
 #define RESIZE false
+
+#define SCAN_BUFFER 0
+#define STAR_FIELD 1
+#define WEIRD_GRADIENT 2
+#define DRAW_TRIANGLE 3
+#define TRIANGLE_FIELD 4
+
+#define RENDER_TYPE TRIANGLE_FIELD
 
 global_variable bool Running;
 
 global_variable BITMAPINFO BitmapInfo;
 global_variable bitmap Bitmap;
 global_variable star_field StarField;
+global_variable triangle_field TriangleField;
+global_variable scan_buffer ScanBuffer;
 global_variable i32 BitmapWidth;
 global_variable i32 BitmapHeight;
 
@@ -25,7 +38,7 @@ Win32ResizeDIBSection(i32 Width, i32 Height) {
 
 	BitmapInfo.bmiHeader.biSize = sizeof(BitmapInfo.bmiHeader);
 	BitmapInfo.bmiHeader.biWidth = BitmapWidth;
-	BitmapInfo.bmiHeader.biHeight = BitmapHeight;
+	BitmapInfo.bmiHeader.biHeight = -BitmapHeight;
 	BitmapInfo.bmiHeader.biPlanes = 1;
 	BitmapInfo.bmiHeader.biBitCount = 32;
 	BitmapInfo.bmiHeader.biCompression = BI_RGB;
@@ -137,7 +150,10 @@ WinMain(HINSTANCE Instance,
 			i32 YOffset = 0;
 
 			StarField = StarFieldCreate(4096, 64.0f, 64.0f);
+			TriangleField = TriangleFieldCreate(6, 64.0f, 64.0f);
+			ScanBuffer = ScanBufferCreate(WINDOW_HEIGHT);
 			Running = true;
+
 			while(Running) {
 				MSG Message;
 				while (PeekMessage(&Message, 0, 0, 0, PM_REMOVE)) {
@@ -149,8 +165,35 @@ WinMain(HINSTANCE Instance,
 
 				}
 
-				StarFieldUpdateAndRender(&Bitmap, &StarField, 0.001f);
-				//RenderWeirdGradient(&Bitmap, XOffset, YOffset);
+				switch (RENDER_TYPE) {
+					case SCAN_BUFFER: {
+						BitmapClear(&Bitmap, 0x00);
+						for (i32 I = 100; I < 200; I++) {
+							ScanBufferAddScanLine(&ScanBuffer, I, 300 - I, 300 + I);
+						}
+						ScanBufferFillBitmap(&Bitmap, &ScanBuffer, 100, 200);
+					} break;
+
+					case STAR_FIELD: {
+						StarFieldUpdateAndRender(&Bitmap, &StarField, 0.001f);
+					} break;
+
+					case WEIRD_GRADIENT: {
+						RenderWeirdGradient(&Bitmap, XOffset, YOffset);
+					} break;
+
+					case DRAW_TRIANGLE: {
+						vertex MaxYVert = VertexCreate(80, 300);
+						vertex MidYVert = VertexCreate(150, 200);
+						vertex MinYVert = VertexCreate(100, 100);
+						BitmapClear(&Bitmap, 0x00);
+						ScanBufferFillTriangle(&Bitmap, &ScanBuffer, &MinYVert, &MidYVert, &MaxYVert);
+					} break;
+
+					case TRIANGLE_FIELD: {
+						TriangleFieldUpdateAndRender(&Bitmap, &ScanBuffer, &TriangleField, 0.001f);
+					} break;
+				}
 
 				HDC DeviceContext = GetDC(Window);
 				RECT ClientRect;
